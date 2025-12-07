@@ -1,0 +1,180 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+
+schedules:
+  - cron: "0 6,14,22 * * *"
+    displayName: Daily 3x Run
+    branches:
+      include:
+        - main
+    always: true
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Global Variables
+  projectDir: '$(Pipeline.Workspace)/TestScripts'
+  # Define Environment URLs here
+  qaUrl: 'https://qa.example.com'
+  stagingUrl: 'https://staging.example.com'
+
+stages:
+  # ---------------------------------------
+  # STAGE 1: BUILD (Compile & Package)
+  # ---------------------------------------
+  - stage: Build
+    displayName: "Build & Compile"
+    jobs:
+      - job: BuildApp
+        displayName: "Compile Code"
+        steps:
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - task: Maven@4
+            displayName: 'Compile and Package'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean compile test-compile'
+              options: '-DskipTests'
+              publishJUnitResults: false
+              codeCoverageToolOption: 'None'
+              
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)'
+              artifact: 'TestScripts'
+              publishLocation: 'pipeline'
+
+  # ---------------------------------------
+  # STAGE 2: QA ENVIRONMENT (Run ALL Tests)
+  # ---------------------------------------
+  - stage: QA
+    displayName: "QA Environment"
+    dependsOn: Build
+    condition: succeeded()
+    variables:
+      envUrl: $(qaUrl) # Use QA URL
+    jobs:
+      - job: QATests
+        displayName: "QA Full Regression"
+        steps:
+          - download: current
+            artifact: 'TestScripts'
+
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          
+          # Run ALL Tests (Tag filter removed)
+          - task: Maven@4
+            displayName: 'Run QA Suite'
+            inputs:
+              mavenPomFile: '$(projectDir)/pom.xml'
+              goals: 'test'
+              # Removed "-Dcucumber.filter.tags" to run ALL tests
+              options: '-Denv.url=$(envUrl) -Dallure.results.directory=$(projectDir)/target/allure-results -Dmaven.test.failure.ignore=true'
+              publishJUnitResults: true
+              testResultsFiles: '$(projectDir)/**/surefire-reports/TEST-*.xml'
+              codeCoverageToolOption: 'None'
+
+          # Generate QA Report
+          - task: Bash@3
+            displayName: 'Generate QA Report'
+            condition: always()
+            inputs:
+              targetType: 'inline'
+              script: |
+                wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+                tar -zxvf allure-2.29.0.tgz
+                
+                RESULTS="$(projectDir)/target/allure-results"
+                REPORT="$(projectDir)/target/allure-report"
+                
+                # Safety check for results dir
+                if [ ! -d "$RESULTS" ]; then
+                  echo "WARNING: Results directory missing. Creating empty dir to prevent failure."
+                  mkdir -p "$RESULTS"
+                fi
+                
+                ./allure-2.29.0/bin/allure generate "$RESULTS" -o "$REPORT" --clean --single-file
+                echo "QA Report generated at: $REPORT"
+
+          # Publish QA Artifact
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish QA Report'
+            condition: always()
+            inputs:
+              targetPath: '$(projectDir)/target/allure-report'
+              artifact: 'allure-report-qa'
+
+  # ---------------------------------------
+  # STAGE 3: STAGING ENVIRONMENT (Run ALL Tests)
+  # ---------------------------------------
+  - stage: Staging
+    displayName: "Staging Environment"
+    dependsOn: QA # Runs after QA succeeds (remove if you want parallel execution)
+    condition: succeeded()
+    variables:
+      envUrl: $(stagingUrl) # Use Staging URL
+    jobs:
+      - job: StagingTests
+        displayName: "Staging Full Regression"
+        steps:
+          - download: current
+            artifact: 'TestScripts'
+
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          
+          # Run ALL Tests (Tag filter removed)
+          - task: Maven@4
+            displayName: 'Run Staging Suite'
+            inputs:
+              mavenPomFile: '$(projectDir)/pom.xml'
+              goals: 'test'
+              # Removed "-Dcucumber.filter.tags" to run ALL tests
+              options: '-Denv.url=$(envUrl) -Dallure.results.directory=$(projectDir)/target/allure-results -Dmaven.test.failure.ignore=true'
+              publishJUnitResults: true
+              testResultsFiles: '$(projectDir)/**/surefire-reports/TEST-*.xml'
+              codeCoverageToolOption: 'None'
+
+          # Generate Staging Report
+          - task: Bash@3
+            displayName: 'Generate Staging Report'
+            condition: always()
+            inputs:
+              targetType: 'inline'
+              script: |
+                wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+                tar -zxvf allure-2.29.0.tgz
+                
+                RESULTS="$(projectDir)/target/allure-results"
+                REPORT="$(projectDir)/target/allure-report"
+                
+                # Safety check for results dir
+                if [ ! -d "$RESULTS" ]; then
+                  echo "WARNING: Results directory missing. Creating empty dir to prevent failure."
+                  mkdir -p "$RESULTS"
+                fi
+                
+                ./allure-2.29.0/bin/allure generate "$RESULTS" -o "$REPORT" --clean --single-file
+                echo "Staging Report generated at: $REPORT"
+
+          # Publish Staging Artifact (Different name)
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Staging Report'
+            condition: always()
+            inputs:
+              targetPath: '$(projectDir)/target/allure-report'
+              artifact: 'allure-report-staging'

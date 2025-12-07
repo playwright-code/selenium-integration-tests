@@ -1,0 +1,172 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+
+schedules:
+  - cron: "0 6,14,22 * * *"
+    displayName: Daily 3x Run
+    branches:
+      include: [ main ]
+    always: true
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  mavenCache: $(Pipeline.Workspace)/.m2/repository
+  # UPDATED URLs BELOW
+  qaUrl: 'https://www.saucedemo.com/'
+  stagingUrl: 'https://www.saucedemo.com/'
+  projectDir: '$(System.DefaultWorkingDirectory)'
+
+stages:
+  # ---------------------------------------
+  # STAGE 1: BUILD CHECK
+  # ---------------------------------------
+  - stage: Build
+    displayName: "Build Verification"
+    jobs:
+      - job: Compile
+        displayName: "Verify Compilation"
+        steps:
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - task: Maven@4
+            displayName: 'Maven Compile'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean compile test-compile'
+              options: '-DskipTests'
+              publishJUnitResults: false
+
+  # ---------------------------------------
+  # STAGE 2: QA ENVIRONMENT
+  # ---------------------------------------
+  - stage: QA
+    displayName: "QA Environment"
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: QA_Tests
+        displayName: "Run QA"
+        strategy:
+          matrix:
+            Smoke:
+              tag: '@smoke'
+              reportName: 'Smoke'
+            Regression:
+              tag: '@regression'
+              reportName: 'Regression'
+            E2E:
+              tag: '@e2e'
+              reportName: 'E2E'
+        steps:
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          
+          # Run Tests with Assertion Details Enabled
+          - task: Maven@4
+            displayName: 'Run $(reportName) Suite'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'test'
+              options: >-
+                -Dcucumber.filter.tags="$(tag)"
+                -Denv.url=$(qaUrl)
+                -Dallure.results.directory=$(projectDir)/target/allure-results
+                -Dmaven.test.failure.ignore=true
+                -Dsurefire.trimStackTrace=false
+                -Dcucumber.plugin="io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm"
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+          # Generate Report
+          - task: Bash@3
+            displayName: 'Generate Report'
+            condition: always()
+            inputs:
+              targetType: 'inline'
+              script: |
+                wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+                tar -zxvf allure-2.29.0.tgz
+                if [ ! -d "target/allure-results" ]; then mkdir -p "target/allure-results"; fi
+                ./allure-2.29.0/bin/allure generate "target/allure-results" -o "target/allure-report" --clean --single-file
+
+          # Publish Report
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Report'
+            condition: always()
+            inputs:
+              targetPath: 'target/allure-report'
+              artifact: 'QA_$(reportName)_Report'
+
+  # ---------------------------------------
+  # STAGE 3: STAGING ENVIRONMENT
+  # ---------------------------------------
+  - stage: Staging
+    displayName: "Staging Environment"
+    dependsOn: QA
+    condition: succeeded()
+    jobs:
+      - job: Staging_Tests
+        displayName: "Run Staging"
+        strategy:
+          matrix:
+            Smoke:
+              tag: '@smoke'
+              reportName: 'Smoke'
+            Regression:
+              tag: '@regression'
+              reportName: 'Regression'
+            E2E:
+              tag: '@e2e'
+              reportName: 'E2E'
+        steps:
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          
+          # Run Tests with Assertion Details Enabled
+          - task: Maven@4
+            displayName: 'Run $(reportName) Suite'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'test'
+              options: >-
+                -Dcucumber.filter.tags="$(tag)"
+                -Denv.url=$(stagingUrl)
+                -Dallure.results.directory=$(projectDir)/target/allure-results
+                -Dmaven.test.failure.ignore=true
+                -Dsurefire.trimStackTrace=false
+                -Dcucumber.plugin="io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm"
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+          # Generate Report
+          - task: Bash@3
+            displayName: 'Generate Report'
+            condition: always()
+            inputs:
+              targetType: 'inline'
+              script: |
+                wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+                tar -zxvf allure-2.29.0.tgz
+                if [ ! -d "target/allure-results" ]; then mkdir -p "target/allure-results"; fi
+                ./allure-2.29.0/bin/allure generate "target/allure-results" -o "target/allure-report" --clean --single-file
+
+          # Publish Report
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Report'
+            condition: always()
+            inputs:
+              targetPath: 'target/allure-report'
+              artifact: 'Staging_$(reportName)_Report'

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results ignored="0" total="6" passed="6" failed="0" skipped="0">
+  <reporter-output>
+  </reporter-output>
+  <suite started-at="2025-12-07T01:41:54 AEST" name="All Test Suite" finished-at="2025-12-07T01:42:12 AEST" duration-ms="18630">
+    <groups>
+      <group name="cucumber">
+        <method signature="AbstractTestNGCucumberTests.runScenario(io.cucumber.testng.PickleWrapper,io.cucumber.testng.FeatureWrapper)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" name="runScenario" class="io.cucumber.testng.AbstractTestNGCucumberTests"/>
+      </group> <!-- cucumber -->
+    </groups>
+    <test started-at="2025-12-07T01:41:54 AEST" name="Cucumber Tests" finished-at="2025-12-07T01:42:12 AEST" duration-ms="18630">
+      <class name="com.example.runners.TestRunner">
+        <test-method is-config="true" signature="setUpClass(org.testng.ITestContext)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:41:54 AEST" name="setUpClass" finished-at="2025-12-07T01:41:54 AEST" duration-ms="559" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@561b6512]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setUpClass -->
+        <test-method signature="runScenario(io.cucumber.testng.PickleWrapper,io.cucumber.testng.FeatureWrapper)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:41:54 AEST" name="runScenario" description="Runs Cucumber Scenarios" data-provider="scenarios" finished-at="2025-12-07T01:42:07 AEST" duration-ms="12831" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA["Customer successfully purchases items with strict assertions"]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA["E2E Order Flow"]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- runScenario -->
+        <test-method signature="runScenario(io.cucumber.testng.PickleWrapper,io.cucumber.testng.FeatureWrapper)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:41:54 AEST" name="runScenario" description="Runs Cucumber Scenarios" data-provider="scenarios" finished-at="2025-12-07T01:42:08 AEST" duration-ms="13562" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA["Login with various user roles from CSV"]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA["Data Driven Login via CSV"]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- runScenario -->
+        <test-method signature="runScenario(io.cucumber.testng.PickleWrapper,io.cucumber.testng.FeatureWrapper)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:41:54 AEST" name="runScenario" description="Runs Cucumber Scenarios" data-provider="scenarios" finished-at="2025-12-07T01:42:07 AEST" duration-ms="12741" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA["Login with various user roles from CSV"]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA["Data Driven Login via CSV"]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- runScenario -->
+        <test-method signature="runScenario(io.cucumber.testng.PickleWrapper,io.cucumber.testng.FeatureWrapper)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:41:54 AEST" name="runScenario" description="Runs Cucumber Scenarios" data-provider="scenarios" finished-at="2025-12-07T01:42:08 AEST" duration-ms="13404" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA["Login with various user roles from CSV"]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA["Data Driven Login via CSV"]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- runScenario -->
+        <test-method signature="runScenario(io.cucumber.testng.PickleWrapper,io.cucumber.testng.FeatureWrapper)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:41:54 AEST" name="runScenario" description="Runs Cucumber Scenarios" data-provider="scenarios" finished-at="2025-12-07T01:42:12 AEST" duration-ms="18007" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA["Verify Inventory UI Elements"]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA["Regression Tests"]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- runScenario -->
+        <test-method signature="runScenario(io.cucumber.testng.PickleWrapper,io.cucumber.testng.FeatureWrapper)[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:41:54 AEST" name="runScenario" description="Runs Cucumber Scenarios" data-provider="scenarios" finished-at="2025-12-07T01:42:08 AEST" duration-ms="13611" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA["Verify Login and Footer Elements"]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA["Smoke Test - Critical Components"]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- runScenario -->
+        <test-method is-config="true" signature="tearDownClass()[pri:0, instance:com.example.runners.TestRunner@37afeb11]" started-at="2025-12-07T01:42:12 AEST" name="tearDownClass" finished-at="2025-12-07T01:42:12 AEST" duration-ms="34" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- tearDownClass -->
+      </class> <!-- com.example.runners.TestRunner -->
+    </test> <!-- Cucumber Tests -->
+  </suite> <!-- All Test Suite -->
+</testng-results>
